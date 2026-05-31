@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FRAPOLOGY</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
+    }
+
+    header {
+      background: #1e1e1e;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      background: #2b2b2b;
+      padding: 10px;
+    }
+
+    nav button {
+      padding: 10px 18px;
+      border: none;
+      background: #444;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    nav button:hover {
+      background: #666;
+    }
+
+    .page {
+      display: none;
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .active {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    pre {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>FRAPOLOGY</h1>
+</header>
+
+<nav>
+  <button onclick="showPage('sub1')">BR-SRV</button>
+  <button onclick="showPage('sub2')">HQ-CLI</button>
+  <button onclick="showPage('sub3')">Задание 1</button>
+  <button onclick="showPage('sub4')">Задание 2</button>
+  <button onclick="showPage('sub5')">Задание 4</button>
+  <button onclick="showPage('sub6')">Задание 5</button>
+  <button onclick="showPage('sub7')">Задание 6</button>
+  <button onclick="showPage('sub8')">Задание 7</button>
+  <button onclick="showPage('sub9')">Задание 8</button>
+  <button onclick="showPage('sub10')">Задание 9</button>
+  <button onclick="showPage('sub11')">Задание 10</button>
+</nav>
+
+<!-- SUBMODULE 1 -->
+<div id="sub1" class="page active">
+  <div class="card">
+    <h2>BR-SRV</h2>
+
+<pre>
+BR-SRV
+
+cat >> /etc/resolvconf.conf << EOF
+name_servers=127.0.0.1
+name_servers=192.168.1.10
+EOF
+resolvconf -u
+systemctl restart network
+
+apt-get update && apt-get install -y task-samba-dc alterator-fbi alterator-net-domain admx-* admc gpui
+sed -i 's/HOSTNAME=NONAME/HOSTNAME=br-rtr.au-team.irpo/g' /etc/sysconfig/network
+systemctl enable --now ahttpd alteratord
+rm -rf /etc/samba/smb.conf /var/{lib.cache}/samba
+mkdir -p /var/lib/samba/sysvol
+
+samba-tool domain provision
+
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 2 -->
+<div id="sub2" class="page">
+  <div class="card">
+    <h2>HQ-CLI</h2>
+
+<pre>
+
+apt-get update && apt-get install -y admx-* admc gpui sudo gpupdate
+
+**Открываем Firefox:** 
+- Переходим по адресу 192.168.3.10:8080
+- Configuration > Expert mode > Apply
+- Web Interface
+- Меняем порт 8080 на 8081 > Apply > Restart http server
+- Переходим по адресу 192.168.3.10:8081
+- Вкладка Domain
+- Выбираем Active Directory Domain Controller
+- DNS Forwarders - 192.168.1.10
+- Domain - au-team.irpo
+- Password - P@ssw0rd
+- Apply
+- Запускаем и дожидаемся состояния - OK.
+
+От рута выполняем:
+
+nmcli con modify DHCP-CLI \
+	ipv4.method auto \
+	ipv4.ignore-auto-dns yes \
+	ipv4.dns 192.168.3.10
+nmcli con down DHCP-CLI
+nmcli con up DHCP-CLI
+
+Открываем виртуальную машину и в ней запускаем терминал, там прописываем: acc
+
+- Пароль toor
+- Выбрать Аутентификация в разделе пользователи. (Если интерфейс на английском языке, то Auth в Networking)
+- Обязательно выибраем - Домен Active Directory
+- Прописать в домен - au-team.irpo
+- Прописать в рабочую группу - au-team
+- Имя компьютера - hq-cli
+- Выбираем обязательно SSID, а не Winbind.
+- Сохранить
+- Логин: Administrator, Пароль: P@ssw0rd
+- Включить групповые политики!
+- Напротив kerberos галочку НЕ ставить.
+- Применяем изменения.
+
+BR-SRV
+
+samba-tool group add hq
+for i in $(seq 1 5); do samba-tool user add hquser$i 'P@ssw0rd'; done
+for i in $(seq 1 5); do samba-tool group addmembers hq hquser$i; done
+admx-msi-setup
+
+HQ-CLI Перезапускаем и входим как Administrator:
+
+admx-msi-setup
+
+Добавляем в sudoers данные строки, а также раскоментируем строку с правами root:
+
+mcedit /etc/sudoers
+
+Для понимания где находятся эти строки, и куда их нужно добавить - пример того как это реализовано у меня:
+User_Alias WHEEL_USERS = %wheel, %AU-TEAM\\hq # Первая строка
+User_Alias XGRP_USERS = %xgrp
+# User_Alias SUDO_USERS = %sudo
+
+##
+## Runas alias specification
+##
+Cmnd_Alias SHELLCMD = /usr/bin/id, /bin/cat, /bin/grep # Вторая строка
+##
+## User privilege specification
+##
+# root ALL=(ALL:ALL) ALL
+
+## Uncomment to allow members of group wheel to execute any command
+WHEEL_USERS ALL=(ALL:ALL) SHELLCMD # Третья строка
+
+sudo roleadd hq wheel
+
+Возвращаемся к рабочему столу в HQ-CLI и в терминале выполняем команды от Administrator
+
+kinit
+P@ssw0rd
+
+admc
+
+Настроим групповую политку:
+
+- Объекты групповой политики
+- au-team.irpo > правой кнопкой мыши
+- Создать политику и связать с этим подразделением
+- Название: sudoers
+- Ставим галочку в графу "принудительно" напротив sudoers
+- Правой кнопкой мыши по sudoers > изменить
+- Компьютер
+- Административные шаблоны
+- Samba
+- Настройки Unix
+- Управление разрешениями Sudo
+- Состояние политики - Включено.
+- sudoers commands - Редактировать.
+- /usr/bin/id
+- /bin/cat
+- /bin/grep
+- Применяем и выходим из admc.
+
+gpupdate -f
+
+Important
+
+Прописываем 2 раза подряд чтобы команда точно применилась, иногда не срабатывает с 1 раза.
+
+Перезагружаем систему и заходим из под hquser5
+
+sudo id
+
+sudo cat /root/.bashrc
+
+sudo cat /root/.bashrc | grep root
+
+Tip
+
+Если все команды выполняются, значит все выполнено верно.
+
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 3 -->
+<div id="sub3" class="page">
+  <div class="card">
+    <h2>Задание 1</h2>
+
+<pre>
+
+📋 Задание 11: Удобным способом установите приложение Яндекс Браузер на HQ-CLI.
+
+apt-get update && apt-get install yandex-browser -y
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 4 -->
+<div id="sub4" class="page">
+  <div class="card">
+    <h2>Задание 2</h2>
+
+<pre>
+
+📋 Задание 2: Сконфигурируйте файловое хранилище на сервере HQ-SRV + Задание 3: Настройте сервер сетевой файловой системы (nfs) на HQ-SRV.
+
+HQ-SRV
+
+lsblk
+mdadm -C /dev/md0 -l 0 -n 2 /dev/sd{b,c}
+lsblk
+mkfs.ext4 /dev/md0
+echo DEVICE partitions >> /etc/mdadm.conf
+mdadm --detail --scan >> /etc/mdadm.conf
+mkdir /raid0
+
+mcedit /etc/fstab
+
+/dev/md0	/raid0	ext4	defaults	0	0
+
+Warning
+
+После того как добавили строку, обязательно сделайте один отступ при помощи клавиши ENTER. В противном случае система после перезагрузки может не запуститься!
+
+mount -a
+df -h
+lsblk
+
+apt-get update && apt-get install -y nfs-{server,utils}
+mkdir /raid0/nfs
+chmod 766 /raid0/nfs
+
+Warning
+
+Комментируем первую строку в файле /etc/exports, в самом низу прописываем, то что идет ниже.
+
+mcedit /etc/exports
+
+/raid0/nfs 192.168.2.0/28(rw,no_subtree_check,no_root_squash)
+
+Применяем изменения:
+
+exportfs -arv
+systemctl enable --now nfs-server.service
+systemctl restart nfs-server.service
+
+HQ-CLI
+
+apt-get update && apt-get install -y nfs-{server,utils}
+mkdir /mnt/nfs
+chmod 777 /mnt/nfs
+
+mcedit /etc/fstab
+
+192.168.1.10:/raid0/nfs	/mnt/nfs	nfs	defaults	0	0
+
+systemctl enable --now nfs-server.service
+systemctl restart nfs-server.service
+
+Монтируем файловую систему и делаем финальную проверку RAID:
+
+mount -a
+df -h
+
+Вывод команды:
+
+Файловая система       Размер Использовано  Дост Использовано% Cмонтировано в
+udevfs                   5,0M         100K  5,0M            2% /dev
+runfs                    1,3G         1,3M  1,3G            1% /run
+/dev/sda2                 15G         7,1G  6,5G           53% /
+tmpfs                    1,3G            0  1,3G            0% /dev/shm
+tmpfs                    1,3G         4,0K  1,3G            1% /tmp
+/dev/sda1                473M          55M  390M           13% /var/log
+192.168.1.10:/raid/nfs   2,0G            0  1,9G            0% /mnt/nfs
+tmpfs                    247M          56K  247M            1% /run/user/0
+tmpfs                    247M          80K  247M            1% /run/user/812001105
+
+Important
+
+⚠️ 💡 Примечание: Выполняем перезагрузку обоих машин и проверяем вывод через df -h на HQ-CLI, расшаренная файловая система с RAID - должна быть автоматически доступна.
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 5 -->
+<div id="sub5" class="page">
+  <div class="card">
+    <h2>Задание 4</h2>
+
+<pre>
+
+ Задание 4: Настройте службу сетевого времени на базе сервиса chrony на маршрутизаторе ISP.
+
+ISP
+
+apt-get update && apt-get install -y chrony tzdata
+
+cat >  /etc/chrony.conf << EOF
+initstepslew 10 ntp0.ntp-servers.net
+pool 127.0.0.1 iburst prefer
+hwtimestamp *
+local stratum 5
+allow 0/0
+EOF
+
+Запустим службу времени:
+
+systemctl restart chronyd
+systemctl enable --now chronyd
+timedatectl set-timezone Asia/Yekaterinburg
+
+В качестве клиентов настроим: HQ-SRV, HQ-CLI, BR-RTR, BR-SRV, выполнить настройку нужно идентично нижней на всех 4-ех клиентах.
+
+apt-get update && apt-get install -y chrony tzdata
+cat > /etc/chrony.conf << EOF
+pool 172.16.1.1 iburst prefer
+EOF
+systemctl restart chronyd
+systemctl enable --now chronyd
+timedatectl set-timezone Asia/Yekaterinburg
+
+ISP
+
+systemctl restart chronyd
+
+HQ-SRV, HQ-CLI, BR-RTR, BR-SRV
+
+chronyc sources
+
+Пример вывода:
+
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^* 172.16.1.1                    5   6    77    35   +859ns[  -23us] +/-  342us
+
+Note
+
+⚠️ 💡 Примечание: На HQ-CLI будет 2 сервера в выводе, но приоритетный ISP.
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 6 -->
+<div id="sub6" class="page">
+  <div class="card">
+    <h2>Задание 5</h2>
+
+<pre>
+
+📋 Задание 5: Сконфигурируйте ansible на сервере BR-SRV
+
+Задание 5:
+
+    Сформируйте файл инвентаря, в инвентарь должны входить HQ-SRV, HQ-CLI, HQ-RTR и BR-RTR
+    Рабочий каталог ansible должен располагаться в /etc/ansible
+    Все указанные машины должны без предупреждений и ошибок отвечать pong на команду ping в ansible посланную с BR-SRV
+
+BR-SRV
+
+apt-get update && apt-get install openssh-server ansible sshpass nano -y
+
+cat > /etc/ansible/hosts << EOF
+[Alt]
+hq-rtr.au-team.irpo ansible_ssh_user=net_admin ansible_ssh_pass=P@ssw0rd
+hq-srv.au-team.irpo ansible_ssh_user=sshuser ansible_ssh_pass=P@ssw0rd
+hq-cli.au-team.irpo ansible_ssh_user=sysadmin ansible_ssh_pass=P@ssw0rd
+br-rtr.au-team.irpo ansible_ssh_user=net_admin ansible_ssh_pass=P@ssw0rd
+
+[all:vars]
+ansible_port=2026
+EOF
+
+mcedit /etc/ansible/ansible.cfg
+
+Нужно добавить строку interpreter и расскоментировать строку host_key_checking
+
+[defaults]
+
+interpreter_python = /usr/bin/python3
+
+# some basic default values...
+# uncomment this to disable SSH key host checking
+host_key_checking = False
+
+Warning
+
+Перед вводом команды пропингуйте br-rtr.au-team.irpo, если пинг идёт на IPv6, то сначала пропишите в /etc/hosts строку: 192.168.3.1 br-rtr.au-team.irpo br-rtr
+
+ansible -m ping all
+
+Tip
+
+Если есть положительные ответы уже на этом моменте, то там где они положительные - настройку не производим.
+
+Note
+
+В моем случае HQ-SRV уже настроен на порт 2026 с данными для авторизации что я указал выше.
+HQ-SRV
+
+apt-get update && apt-get install openssh-server -y
+
+cat >> /etc/openssh/sshd_config << EOF
+Port 2026
+MaxAuthTries 2
+AllowUsers sshuser
+EOF
+
+systemctl enable --now sshd
+systemctl restart sshd
+
+HQ-RTR и BR-RTR
+
+apt-get update && apt-get install openssh-server -y
+
+cat >> /etc/openssh/sshd_config << EOF
+Port 2026
+MaxAuthTries 2
+AllowUsers net_admin
+EOF
+
+systemctl enable --now sshd
+systemctl restart sshd
+
+HQ-CLI
+
+apt-get update && apt-get install openssh-server -y
+
+sudo useradd sysadmin
+
+passwd sysadmin
+
+sudo usermod -a -G remote sysadmin
+
+cat >> /etc/openssh/sshd_config << EOF
+Port 2026
+MaxAuthTries 2
+AllowGroups wheel remote
+EOF
+
+systemctl enable --now sshd
+systemctl restart sshd
+
+BR-SRV
+
+ansible -m ping all
+
+Вывод команды:
+
+hq-srv.au-team.irpo | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+br-rtr.au-team.irpo | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+hq-rtr.au-team.irpo | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+hq-cli.au-team.irpo | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+
+Tip
+
+⚠️ 💡 Важно: Проверяем чтобы вывод команды совпадал, если все совпдает, значит задание выполнено верно.
+
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 7 -->
+<div id="sub7" class="page">
+  <div class="card">
+    <h2>Задание </h2>
+    <pre> 
+Задание 6: Разверните веб приложение в docker на сервере BR-SRV.
+
+Задание 6:
+BR-SRV
+
+apt-get update && apt-get install docker-ce docker-compose curl -y
+systemctl enable --now docker.socket docker.service
+systemctl restart docker.socket docker.service
+
+mount /dev/sr0 /mnt
+
+Проверяем точку монтирования:
+
+lsblk
+
+Сверяем вывод:
+
+NAME   MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda      8:0    0    10G  0 disk 
+├─sda1   8:1    0   503M  0 part /var/log
+└─sda2   8:2    0   9.5G  0 part /
+sr0     11:0    1 929.7M  0 rom  /mnt
+
+Проверяем содержимое внутри образа:
+
+ls -la /mnt
+
+total 38
+dr-xr-xr-x  1 root root   256 Nov 23  2019 .
+drwxr-xr-x 24 root root  4096 Dec 11 01:08 ..
+dr-xr-xr-x  1 root root   332 Nov 23  2019 docker
+dr-xr-xr-x  1 root root   150 Nov 23  2019 playbook
+-r-xr-xr-x  1 root root 32527 Oct 13 04:22 Users.csv
+dr-xr-xr-x  1 root root   220 Nov 23  2019 web
+
+Копируем docker с образа на систему:
+
+cp -r /mnt/docker /root/docker
+
+Проверяем файлы:
+
+ls -la /root/docker
+
+total 951964
+dr-xr-xr-x 2 root root      4096 Dec 12 22:54 .
+drwx------ 8 root root      4096 Dec 12 22:54 ..
+-r-xr-xr-x 1 root root 333014016 Dec 12 22:54 mariadb_latest.tar
+-r-xr-xr-x 1 root root 282003968 Dec 12 22:54 postgresql_latest.tar
+-r-xr-xr-x 1 root root      2716 Dec 12 22:54 readme.txt
+-r-xr-xr-x 1 root root 359760896 Dec 12 22:54 site_latest.tar
+
+Загружаем в docker
+
+docker load -i /root/docker/site_latest.tar
+docker load -i /root/docker/mariadb_latest.tar
+
+Сверяем и проверяем TAG, это потребуется для image: в docker-compose.yaml
+
+docker image ls
+
+У меня получился такой вывод:
+
+REPOSITORY   TAG       IMAGE ID       CREATED        SIZE
+site         latest    015b4b821098   2 months ago   353MB
+mariadb      10.11     bc52d24721da   4 months ago   327MB
+
+Создаем директорию и файл конфигурации:
+
+mkdir testapp
+cd testapp/
+curl -O https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/site.yaml
+
+Поднимаем Docker:
+
+docker compose  -f site.yaml up -d
+docker ps
+
+Сверяем вывод:
+
+CONTAINER ID   IMAGE           COMMAND                  CREATED          STATUS                         PORTS      NAMES
+2f8db625ddfc   site:latest     "sh -c 'python3 -m a…"   22 seconds ago   Restarting (1) 2 seconds ago              testapp
+13af1bc1529e   mariadb:10.11   "docker-entrypoint.s…"   22 seconds ago   Up 21 seconds                  3306/tcp   db
+
+Либо может быть так:
+
+CONTAINER ID   IMAGE           COMMAND                  CREATED       STATUS             PORTS                                       NAMES
+264276eed58b   site:latest     "sh -c 'python3 -m a…"   27 seconds ago   Up 26 seconds   0.0.0.0:8080->8000/tcp, :::8080->8000/tcp   testapp
+8e79d22f6fa7   mariadb:10.11   "docker-entrypoint.s…"   27 seconds ago   Up 26 seconds   3306/tcp                                    db
+
+Caution
+
+На этом этапе заходим на HQ-CLI, и через Firefox пробуем зайти на 192.168.3.10:8080, если страница не открывается, то выполняем действия ниже, если открылась, задание выполнено.
+BR-SRV
+
+docker exec -it db /bin/bash
+mariadb -u root -p
+toor
+
+SHOW DATABASES;
+
+Причина кроется тут, нет нужной базы данных, пропишем ее и пользователя, а так же привилегии в ручную:
+
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| sys                |
++--------------------+
+4 rows in set (0.001 sec)
+
+Выполняем в точности как у меня:
+
+CREATE DATABASE testdb;
+CREATE USER 'testc'@'%' IDENTIFIED BY 'P@ssw0rd';
+GRANT ALL PRIVILEGES ON testdb.* TO 'testc'@'%';
+FLUSH PRIVILEGES;
+
+Note
+
+Пробуем снова с HQ-CLI зайти на 192.168.3.10:8080, если страница открывается, задание выполнено.
+
+Tip
+
+После изменений сайт может начать открываться не сразу, иногда нужно до 1 минуты.
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 8 -->
+<div id="sub8" class="page">
+  <div class="card">
+    <h2>Задание 7</h2>
+    <pre> 
+📋 Задание 7: Разверните веб приложение на сервере HQ-SRV.
+
+apt-get update && apt-get install apache2 mariadb php8.2 apache2-mod_php8.2 php8.2-mysqli -y
+
+systemctl enable --now httpd2 mariadb
+systemctl restart httpd2 mariadb
+
+mkdir /mnt/add_cd
+mount /dev/sr0 /mnt/add_cd
+ls -la /mnt/add_cd
+
+Сверяем вывод:
+
+total 38
+dr-xr-xr-x 1 root root   256 Nov 23  2019 .
+drwxr-xr-x 3 root root  4096 Dec 13 12:54 ..
+dr-xr-xr-x 1 root root   332 Nov 23  2019 docker
+dr-xr-xr-x 1 root root   150 Nov 23  2019 playbook
+-r-xr-xr-x 1 root root 32527 Oct 13 04:22 Users.csv
+dr-xr-xr-x 1 root root   220 Nov 23  2019 web
+
+cp -r /mnt/add_cd/web /root/web
+ls -la /root/web
+
+Сверяем вывод:
+
+total 36
+dr-xr-xr-x 2 root root  4096 Dec 13 12:55 .
+drwx------ 9 root root  4096 Dec 13 12:55 ..
+-r-xr-xr-x 1 root root   415 Dec 13 12:55 dump.sql
+-r-xr-xr-x 1 root root  3964 Dec 13 12:55 index.php
+-r-xr-xr-x 1 root root 16780 Dec 13 12:55 logo.png
+
+Создаем базу данных webdb
+
+mysql -u root -e "CREATE DATABASE webdb;"
+
+Импортируем дамп
+
+mysql -u root webdb < /root/web/dump.sql
+
+Проверяем импорт
+
+mysql -u root -e "USE webdb; SHOW TABLES;"
+
+Сверяем вывод:
+
++-----------------+
+| Tables_in_webdb |
++-----------------+
+| employees       |
++-----------------+
+
+Создаем пользователя 'web' с паролем 'P@ssw0rd'
+
+mysql -u root -e "CREATE USER 'web'@'localhost' IDENTIFIED BY 'P@ssw0rd';"
+
+Даем права на базу webdb
+
+mysql -u root -e "GRANT ALL PRIVILEGES ON webdb.* TO 'web'@'localhost';"
+
+Применяем изменения
+
+mysql -u root -e "FLUSH PRIVILEGES;"
+
+Проверяем создание пользователя
+
+mysql -u root -e "SELECT user, host FROM mysql.user;"
+
+Сверяем вывод:
+
++-------------+---------------------+
+| User        | Host                |
++-------------+---------------------+
+| root        | 127.0.0.1           |
+| root        | ::1                 |
+| root        | hq-srv.au-team.irpo |
+| mariadb.sys | localhost           |
+| root        | localhost           |
+| web         | localhost           |
++-------------+---------------------+
+
+cp /root/web/index.php /var/www/html/
+cp /root/web/logo.png /var/www/html/
+
+chown -R apache2:webmaster /var/www/html/
+chmod 755 /var/www/html/
+
+ls -la /var/www/html/index.php
+ls -la /var/www/html/logo.png
+
+Сверяем вывод
+
+-r-xr-xr-x 1 apache2 webmaster 3964 Dec 14 15:25 /var/www/html/index.php
+-r-xr-xr-x 1 apache2 webmaster 16780 Dec 14 15:25 /var/www/html/logo.png
+
+mcedit /var/www/html/index.php
+
+Приводим к такому виду:
+
+$username = "web";
+$password = "P@ssw0rd";
+$dbname = "webdb";
+
+mv /var/www/html/index.html /var/www/html/index.html.default
+ls -la /var/www/html/
+
+Сверяем вывод:
+
+total 44
+drwxr-sr-x 3 apache2 webmaster  4096 Dec 14 15:29 .
+drwxr-xr-x 9 root    webmaster  4096 Dec 14 15:24 ..
+drwxrws--x 2 apache2 webmaster  4096 Oct 12  2010 addon-modules
+-rw-r--r-- 1 apache2 webmaster    45 Jul 28 15:35 index.html.default
+-r-xr-xr-x 1 apache2 webmaster  3968 Dec 14 15:28 index.php
+-r-xr-xr-x 1 apache2 webmaster  3964 Dec 14 15:25 index.php~
+-r-xr-xr-x 1 apache2 webmaster 16780 Dec 14 15:25 logo.png
+
+systemctl restart httpd2 mariadb
+
+Caution
+
+Если перезапуск httpd2 и mariadb не происходит и зависает, то перезагружаем полностью HQ-SRV. Останавливаем процесс через ctrl+z, и прописываем reboot.
+
+Note
+
+Заходим на HQ-CLI, проверяем 192.168.1.10, должен открыться сайт, фио - DemoTest, отдел - DemoTest. Если эти поля уже заполены, значит все выполнено верно, должны корретно отображаться шрифты русского языка и логотип.
+
+Tip
+
+Задание выполенено, веб-приложение работает на Apache + PHP + MariaDB, доступно по сети, выполняет CRUD-операции с базой данных сотрудников.
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 9 -->
+<div id="sub9" class="page">
+  <div class="card">
+    <h2>Задание 8</h2>
+
+    <pre> 
+📋 Задание 8: На маршрутизаторах сконфигурируйте статическую трансляцию портов.
+BR-RTR
+
+apt-get update && apt-get install iptables -y
+
+Проброс порта 8080 для testapp (Docker приложение на BR-SRV).
+
+iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 192.168.3.10:8080
+iptables -A FORWARD -p tcp -d 192.168.3.10 --dport 8080 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+Проброс порта 2026 для SSH.
+
+iptables -t nat -A PREROUTING -p tcp --dport 2026 -j DNAT --to-destination 192.168.3.10:2026
+iptables -A FORWARD -p tcp -d 192.168.3.10 --dport 2026 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+Сохранение правил и перезапуск.
+
+iptables-save > /etc/sysconfig/iptables
+systemctl restart iptables
+systemctl enable --now iptables
+
+Выполним проверку:
+
+iptables -t nat -L -n -v
+
+Сверяем вывод:
+
+Chain PREROUTING (policy ACCEPT 1 packets, 76 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:8080 to:192.168.3.10:8080
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:2026 to:192.168.3.10:2026
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain POSTROUTING (policy ACCEPT 1 packets, 76 bytes)
+ pkts bytes target     prot opt in     out     source               destination  
+
+HQ-RTR
+
+apt-get update && apt-get install iptables -y
+
+Проброс порта 8080 для веб-приложения Apache (перенаправляем на порт 80 HQ-SRV).
+
+iptables -t nat -A PREROUTING -p tcp --dport 8080 -j DNAT --to-destination 192.168.1.10:80
+iptables -A FORWARD -p tcp -d 192.168.1.10 --dport 80 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+Проброс порта 2026 для SSH.
+
+iptables -t nat -A PREROUTING -p tcp --dport 2026 -j DNAT --to-destination 192.168.1.10:2026
+iptables -A FORWARD -p tcp -d 192.168.1.10 --dport 2026 -m state --state NEW,ESTABLISHED,RELATED -j ACCEPT
+
+Сохранение правил и перезапуск.
+
+iptables-save > /etc/sysconfig/iptables
+systemctl restart iptables
+systemctl enable --now iptables
+
+Выполним проверку:
+
+iptables -t nat -L -n -v
+
+Сверяем вывод:
+
+Chain PREROUTING (policy ACCEPT 2 packets, 116 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:8080 to:192.168.1.10:80
+    0     0 DNAT       tcp  --  *      *       0.0.0.0/0            0.0.0.0/0            tcp dpt:2026 to:192.168.1.10:2026
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination         
+
+Chain POSTROUTING (policy ACCEPT 2 packets, 116 bytes)
+ pkts bytes target     prot opt in     out     source               destination  
+
+Note
+
+Если выводы совпадают, задание выполнено верно.
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 10 -->
+<div id="sub10" class="page">
+  <div class="card">
+    <h2>Задание 9</h2>
+<pre>
+ Задание 9: Настройте веб-сервер nginx как обратный прокси-сервер на ISP.
+ISP
+
+apt-get update && apt-get install nginx mc -y
+
+mcedit /etc/nginx/sites-available.d/default.conf
+
+Приводим к такому:
+
+server {
+        listen 80;
+        server_name web.au-team.irpo;   
+
+        location / {
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $remote_addr;
+                        proxy_set_header X-Forwarded-Proto $scheme;
+                        proxy_pass http://172.16.1.10:8080;
+        }
+}
+server {
+        listen 80;
+        server_name docker.au-team.irpo;
+
+        location / {
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $remote_addr;
+                        proxy_set_header X-Forwarded-Proto $scheme;
+                        proxy_pass http://172.16.2.10:8080;
+        }
+}
+
+ln -s /etc/nginx/sites-available.d/default.conf /etc/nginx/sites-enabled.d/
+systemctl enable --now nginx
+systemctl restart nginx
+systemctl status nginx
+
+HQ-CLI
+
+mcedit /etc/hosts
+
+172.16.1.1	web.au-team.irpo web
+172.16.2.1	docker.au-team.irpo docker
+
+Note
+
+Открываем Firefox, пробуем зайти на http://web.au-team.irpo и http://docker.au-team.irpo, если оба сайта открылись и корректно отображаются, задание выполнено.
+</pre>
+
+  </div>
+</div>
+
+
+<!-- SUBMODULE 11 -->
+<div id="sub11" class="page">
+  <div class="card">
+    <h2>Задание 10</h2>
+<pre>
+
+📋 Задание 10: На маршрутизаторе ISP настройте web-based аутентификацию
+ISP
+
+apt-get update && apt-get install apache2-htpasswd -y
+
+htpasswd -c /etc/nginx/.htpasswd WEB
+P@ssw0rd
+
+mcedit /etc/nginx/sites-available.d/default.conf
+
+Добавляем 2 строки после proxy_pass в web.au-team.irpo, чтобы получилось такое содержимое файла:
+
+server {
+        listen 80;
+        server_name web.au-team.irpo;
+
+        location / {
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $remote_addr;
+                        proxy_set_header X-Forwarded-Proto $scheme;
+                        proxy_pass http://172.16.1.10:8080;
+                        auth_basic "Restricted";
+                        auth_basic_user_file /etc/nginx/.htpasswd;
+        }
+}
+server {
+        listen 80;
+        server_name docker.au-team.irpo;
+
+        location / {
+                        proxy_set_header Host $host;
+                        proxy_set_header X-Real-IP $remote_addr;
+                        proxy_set_header X-Forwarded-For $remote_addr;
+                        proxy_set_header X-Forwarded-Proto $scheme;
+                        proxy_pass http://172.16.2.10:8080;
+        }
+}
+
+systemctl restart nginx
+systemctl status nginx
+
+● nginx.service - The nginx HTTP and reverse proxy server
+     Loaded: loaded (/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+     Active: active (running) since Sun 2025-12-14 22:16:44 +07; 4min 31s ago
+    Process: 7780 ExecStartPre=/usr/sbin/nginx -t (code=exited, status=0/SUCCESS)
+   Main PID: 7782 (nginx)
+      Tasks: 11 (limit: 529)
+     Memory: 8.5M
+        CPU: 16ms
+     CGroup: /system.slice/nginx.service
+             ├─ 7782 "nginx: master process /usr/sbin/nginx -g daemon off;"
+             ├─ 7783 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7784 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7785 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7786 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7787 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7788 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7789 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7790 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             ├─ 7791 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+             └─ 7792 "nginx: worker process" "" "" "" "" "" "" "" "" ""
+
+Dec 14 22:16:44 isp.au-team.irpo systemd[1]: Starting The nginx HTTP and reverse proxy server...
+Dec 14 22:16:44 isp.au-team.irpo nginx[7780]: nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+Dec 14 22:16:44 isp.au-team.irpo nginx[7780]: nginx: configuration file /etc/nginx/nginx.conf test is successful
+Dec 14 22:16:44 isp.au-team.irpo systemd[1]: Started The nginx HTTP and reverse proxy server.
+
+</pre>
+
+  </div>
+</div>
+
+
+<script>
+  function showPage(pageId) {
+    var pages = document.getElementsByClassName('page');
+    for (var i = 0; i < pages.length; i++) {
+      pages[i].classList.remove('active');
+    }
+    document.getElementById(pageId).classList.add('active');
+  }
+</script>
+
+</body>
+</html>

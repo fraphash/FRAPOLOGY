@@ -3,49 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>FRAPOLOGY — Шпаргалка по настройке</title>
+  <title>FRAPOLOGY</title>
 
   <style>
-    :root {
-      --bg-main: #0f111a;
-      --bg-card: #151824;
-      --bg-nav: #1a1e2e;
-      --accent: #00e676;
-      --accent-hover: #00b354;
-      --text-main: #e2e8f0;
-      --text-muted: #94a3b8;
-      --code-comment: #64748b;
-      --code-keyword: #ff79c6;
-      --code-string: #f1fa8c;
-    }
-
     body {
       margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background: var(--bg-main);
-      color: var(--text-main);
-      line-height: 1.6;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
     }
 
     header {
-      background: linear-gradient(135deg, #1a1e2e 0%, #0f111a 100%);
-      padding: 30px 20px;
+      background: #1e1e1e;
+      color: white;
+      padding: 20px;
       text-align: center;
-      border-bottom: 1px solid #22293f;
-    }
-
-    header h1 {
-      margin: 0;
-      font-size: 2.5rem;
-      letter-spacing: 2px;
-      color: #fff;
-      text-shadow: 0 0 10px rgba(0, 230, 118, 0.3);
-    }
-
-    header p {
-      margin: 5px 0 0 0;
-      color: var(--text-muted);
-      font-size: 0.95rem;
     }
 
     nav {
@@ -53,48 +25,28 @@
       flex-wrap: wrap;
       gap: 10px;
       justify-content: center;
-      background: var(--bg-nav);
-      padding: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      border-bottom: 1px solid #22293f;
+      background: #2b2b2b;
+      padding: 10px;
     }
 
     nav button {
-      padding: 10px 20px;
-      border: 1px solid transparent;
-      background: #22293f;
-      color: var(--text-main);
-      border-radius: 6px;
+      padding: 10px 18px;
+      border: none;
+      background: #444;
+      color: white;
+      border-radius: 8px;
       cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s ease;
     }
 
     nav button:hover {
-      background: #2e3754;
-      border-color: var(--accent);
-    }
-
-    nav button.nav-active {
-      background: var(--accent);
-      color: #0f111a;
-      box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
+      background: #666;
     }
 
     .page {
       display: none;
-      padding: 30px 15px;
-      max-width: 1000px;
+      padding: 30px;
+      max-width: 900px;
       margin: auto;
-      animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .active {
@@ -102,89 +54,20 @@
     }
 
     .card {
-      background: var(--bg-card);
-      padding: 30px;
+      background: white;
+      padding: 20px;
       border-radius: 12px;
-      border: 1px solid #22293f;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    pre {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      font-size: 15px;
     }
 
     h2 {
       margin-top: 0;
-      font-size: 1.8rem;
-      border-left: 4px solid var(--accent);
-      padding-left: 12px;
-      color: #fff;
-    }
-
-    .code-container {
-      position: relative;
-      background: #0b0d14;
-      border-radius: 8px;
-      padding: 20px;
-      margin-top: 20px;
-      border: 1px solid #1a1e2e;
-      overflow-x: auto;
-    }
-
-    pre {
-      margin: 0;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      font-family: "Fira Code", Consolas, Monaco, monospace;
-      font-size: 14px;
-      color: #cbd5e1;
-    }
-
-    .c-comment { color: var(--code-comment); font-style: italic; }
-    .c-header { color: var(--accent); font-weight: bold; }
-    .c-eof { color: var(--code-string); font-weight: bold; }
-
-    .copy-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: #1e2235;
-      color: var(--text-muted);
-      border: 1px solid #2e3754;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: bold;
-      transition: all 0.2s;
-    }
-
-    .copy-btn:hover {
-      background: var(--accent);
-      color: #0f111a;
-      border-color: var(--accent);
-    }
-
-    .topology-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border: 2px dashed #2e3754;
-      border-radius: 8px;
-      padding: 60px 20px;
-      color: var(--text-muted);
-      text-align: center;
-    }
-
-    .topology-placeholder svg {
-      width: 64px;
-      height: 64px;
-      fill: currentColor;
-      margin-bottom: 15px;
-    }
-
-    @media (max-width: 600px) {
-      nav { gap: 6px; padding: 8px; }
-      nav button { padding: 8px 12px; font-size: 13px; flex: 1 1 calc(33% - 6px); }
-      .card { padding: 15px; }
-      header h1 { font-size: 1.8rem; }
     }
   </style>
 </head>
@@ -192,34 +75,35 @@
 
 <header>
   <h1>FRAPOLOGY</h1>
-  <p>Интерактивный справочник конфигурации сетевых узлов и лабораторных стендов</p>
 </header>
 
-<nav id="nav-container">
-  <button class="nav-active" onclick="showPage('sub1', this)">ISP 1</button>
-  <button onclick="showPage('sub2', this)">BR-RTR 1</button>
-  <button onclick="showPage('sub3', this)">HQ-RTR 1</button>
-  <button onclick="showPage('sub4', this)">HQ-SRV 1</button>
-  <button onclick="showPage('sub5', this)">BR_SRV 1</button>
-  <button onclick="showPage('sub6', this)">HQ-CLI 1</button>
-  <button onclick="showPage('sub7', this)">Topology</button>
+<nav>
+  <button onclick="showPage('sub1')">ISP 1</button>
+  <button onclick="showPage('sub2')">BR-RTR 1</button>
+  <button onclick="showPage('sub3')">HQ-RTR 1</button>
+  <button onclick="showPage('sub4')">HQ-SRV 1</button>
+  <button onclick="showPage('sub5')">BR_SRV 1</button>
+  <button onclick="showPage('sub6')">HQ-CLI 1</button>
+  <button onclick="showPage('sub7')">Topology</button>
 </nav>
 
-<!-- SUBMODULE 1: ISP -->
+<!-- SUBMODULE 1 -->
 <div id="sub1" class="page active">
   <div class="card">
     <h2>ISP 1</h2>
-    <div class="code-container">
-      <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+
 <pre>
+# ISP
+
 hostnamectl set-hostname isp.au-team.irpo; exec bash
 
 mkdir /etc/net/ifaces/ens19 /etc/net/ifaces/ens20
 
 echo "172.16.1.1/28" > /etc/net/ifaces/ens19/ipv4address
+
 echo "172.16.2.1/28" > /etc/net/ifaces/ens20/ipv4address
 
-cat > /etc/net/ifaces/ens19/options << EOF
+cat > /etc/net/ifaces/ens19/options << EOF 
 BOOTPROTO=static
 TYPE=eth
 NM_CONTROLLED=no
@@ -230,7 +114,7 @@ CONFIG_IPV4=yes
 SYSTEMD_CONTROLLED=no
 EOF
 
-cat > /etc/net/ifaces/ens20/options << EOF
+cat > /etc/net/ifaces/ens20/options << EOF 
 BOOTPROTO=static
 TYPE=eth
 NM_CONTROLLED=no
@@ -244,6 +128,7 @@ EOF
 systemctl restart network
 
 sed -i 's/net.ipv4.ip_forward = 0/net.ipv4.ip_forward = 1/' /etc/net/sysctl.conf
+
 sysctl -p 
 
 systemctl restart network
@@ -251,27 +136,33 @@ systemctl restart network
 apt-get update && apt-get install -y iptables tzdata
 
 iptables -t nat -A POSTROUTING -o ens18 -s 172.16.1.0/28 -j MASQUERADE
+
 iptables -t nat -A POSTROUTING -o ens18 -s 172.16.2.0/28 -j MASQUERADE 
+
 iptables -A FORWARD -i ens19 -o ens18 -s 172.16.1.0/28 -j ACCEPT
+
 iptables -A FORWARD -i ens20 -o ens18 -s 172.16.2.0/28 -j ACCEPT
 
 iptables-save > /etc/sysconfig/iptables
+
 systemctl enable --now iptables
+
 systemctl restart iptables
 
 timedatectl set-timezone Asia/Yekaterinburg
 </pre>
-    </div>
+
   </div>
 </div>
 
-<!-- SUBMODULE 2: BR-RTR -->
+<!-- SUBMODULE 2 -->
 <div id="sub2" class="page">
   <div class="card">
     <h2>BR-RTR 1</h2>
-    <div class="code-container">
-      <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+
 <pre>
+# BR-RTR
+
 en
 conf
 hostname br-rtr.au-team.irpo
@@ -368,17 +259,18 @@ ip name-server 192.168.100.30
 end
 wr mem
 </pre>
-    </div>
+
   </div>
 </div>
 
-<!-- SUBMODULE 3: HQ-RTR -->
+<!-- SUBMODULE 3 -->
 <div id="sub3" class="page">
   <div class="card">
     <h2>HQ-RTR 1</h2>
-    <div class="code-container">
-      <button class="copy-btn" onclick="copyCode(this)">Скопировать</button>
+
 <pre>
+# HQ-RTR
+
 en
 conf
 hostname hq-rtr.au-team.irpo
@@ -514,12 +406,169 @@ ip name-server 192.168.100.30
 end
 wr mem
 </pre>
-    </div>
+
   </div>
 </div>
 
-<!-- SUBMODULE 4: HQ-SRV -->
+<!-- SUBMODULE 4 -->
 <div id="sub4" class="page">
   <div class="card">
     <h2>HQ-SRV 1</h2>
-    <div class="code-container">
+
+<pre>
+# HQ-SRV
+
+hostnamectl set-hostname hq-srv.au-team.irpo; exec bash
+
+cat > /etc/net/ifaces/ens18/options << EOF 
+BOOTPROTO=static
+TYPE=eth
+CONFIG_WIRELESS=no
+SYSTEMD_BOOTPROTO=static
+CONFIG_IPV4=yes
+DISABLED=no
+NM_CONTROLLED=no
+SYSTEMD_CONTROLLED=no
+EOF
+
+echo "192.168.100.30/27" > /etc/net/ifaces/ens18/ipv4address
+
+echo "default via 192.168.100.1" > /etc/net/ifaces/ens18/ipv4route
+
+systemctl restart network
+
+useradd -u 2026 -G wheel sshuser
+passwd sshuser
+
+echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+cat >> /etc/openssh/sshd_config << EOF
+Port 2026
+MaxAuthTries 2
+PasswordAuthentication yes
+AllowUsers    sshuser
+Banner /etc/openssh/bannermotd
+EOF
+
+echo "Authorized access only" > /etc/openssh/bannermotd
+
+systemctl restart sshd
+
+echo "nameserver 8.8.8.8" >> /etc/resolv.conf
+
+systemctl restart network
+
+apt-get update && apt-get install -y dnsmasq 
+
+cat > /etc/dnsmasq.conf << EOF
+listen-address=192.168.100.30
+domain=au-team.irpo
+strict-order
+no-resolv
+server=8.8.8.8
+server=8.8.4.4
+address=/isp.au-team.irpo/192.168.1.25
+address=/hq-rtr.au-team.irpo/192.168.100.1
+address=/hq-srv.au-team.irpo/192.168.100.30
+address=/hq-cli.au-team.irpo/192.168.200.2
+address=/br-rtr.au-team.irpo/192.168.0.1
+address=/br-srv.au-team.irpo/192.168.0.14
+EOF
+
+systemctl restart dnsmasq
+systemctl status dnsmasq
+
+timedatectl set-timezone Asia/Yekaterinburg
+timedatectl status
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 5 -->
+<div id="sub5" class="page">
+  <div class="card">
+    <h2>BR_SRV 1</h2>
+
+<pre>
+# BR-SRV
+
+hostnamectl set-hostname br-srv.au-team.irpo; exec bash
+
+cat > /etc/net/ifaces/ens18/options << EOF
+BOOTPROTO=static
+TYPE=eth
+CONFIG_WIRELESS=no
+SYSTEMD_BOOTPROTO=static
+CONFIG_IPV4=yes
+DISABLED=no
+NM_CONTROLLED=no
+SYSTEMD_CONTROLLED=no
+EOF
+
+echo "192.168.0.14/28" > /etc/net/ifaces/ens18/ipv4address
+
+echo "default via 192.168.0.1" >> /etc/net/ifaces/ens18/ipv4route
+
+echo "nameserver 192.168.100.30" >> /etc/net/ifaces/ens18/resolv.conf
+
+systemctl restart network
+
+useradd -u 2026 -G wheel sshuser
+passwd sshuser
+
+echo "sshuser ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+
+cat >> /etc/openssh/sshd_config << EOF
+Port 2026
+MaxAuthTries 2
+PasswordAuthentication yes
+AllowUsers    sshuser
+Banner /etc/openssh/bannermotd
+EOF
+
+echo "Authorized access only!" > /etc/openssh/bannermotd
+
+systemctl restart sshd
+
+timedatectl set-timezone Asia/Yekaterinburg
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 6 -->
+<div id="sub6" class="page">
+  <div class="card">
+    <h2>HQ-CLI 1</h2>
+
+<pre>
+# HQ-CLI
+
+hostnamectl set-hostname hq-cli.au-team.irpo
+timedatectl set-timezone Asia/Yekaterinburg
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 7 -->
+<div id="sub7" class="page">
+  <div class="card">
+    <h2>Topology</h2>
+    <p>Место для схемы сети.</p>
+  </div>
+</div>
+
+<script>
+  function showPage(pageId) {
+    var pages = document.getElementsByClassName('page');
+    for (var i = 0; i < pages.length; i++) {
+      pages[i].classList.remove('active');
+    }
+    document.getElementById(pageId).classList.add('active');
+  }
+</script>
+
+</body>
+</html>

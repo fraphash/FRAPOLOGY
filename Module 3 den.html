@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FRAPOLOGY</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
+    }
+
+    header {
+      background: #1e1e1e;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      background: #2b2b2b;
+      padding: 10px;
+    }
+
+    nav button {
+      padding: 10px 18px;
+      border: none;
+      background: #444;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    nav button:hover {
+      background: #666;
+    }
+
+    .page {
+      display: none;
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .active {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    pre {
+      white-space: pre-wrap;
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>FRAPOLOGY</h1>
+</header>
+
+<nav>
+  <button onclick="showPage('sub1')">Задание 1</button>
+  <button onclick="showPage('sub2')">Задание 2</button>
+  <button onclick="showPage('sub3')">Задание 3</button>
+  <button onclick="showPage('sub4')">Задание 4</button>
+  <button onclick="showPage('sub5')">Задание 5</button>
+  <button onclick="showPage('sub6')">Задание 6</button>
+  <button onclick="showPage('sub7')">Задание 7</button>
+  <button onclick="showPage('sub8')">Задание 8</button>
+  <button onclick="showPage('sub9')">Задание 9</button>
+
+</nav>
+
+<!-- SUBMODULE 1 -->
+<div id="sub1" class="page active">
+  <div class="card">
+    <h2>Задание 1</h2>
+
+<pre>
+Задание 1: импорт пользователей BR-SRV
+
+apt-get update && apt-get install -y dos2unix curl
+mount /dev/sr0 /mnt
+cp /mnt/Users.csv /opt/
+curl -o /opt/import_users.sh https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/import_users.sh
+ls /opt
+dos2unix /opt/import_users.sh
+chmod +x /opt/import_users.sh
+
+Необходимо выдать права root
+
+mcedit /etc/sudoers
+
+/opt/import_users.sh
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 2 -->
+<div id="sub2" class="page">
+  <div class="card">
+    <h2>Задание 2</h2>
+
+<pre>
+
+Задание 2: настройка центра сертификации HQ-SRV
+
+HQ-SRV
+
+apt-get update && apt-get install -y openssl ca-certificates
+mkdir -p /etc/pki/CA/{private,certs,newcerts,crl}
+touch /etc/pki/CA/index.txt
+echo 1000 > /etc/pki/CA/serial
+chmod 777 /etc/pki/CA/private
+
+openssl req -x509 -new -nodes \
+-keyout /etc/pki/CA/private/ca.key \
+-out /etc/pki/CA/certs/ca.crt \
+-days 3650 \
+-sha256 \
+-subj "/CN=AU-TEAM Root CA"
+
+openssl genrsa -out /etc/pki/CA/private/web.au-team.irpo.key 2048
+
+openssl req -new \
+-key /etc/pki/CA/private/web.au-team.irpo.key \
+-out /etc/pki/CA/web.au-team.irpo.csr \
+-subj "/CN=web.au-team.irpo"
+
+openssl genrsa -out /etc/pki/CA/private/docker.au-team.irpo.key 2048
+
+openssl req -new \
+-key /etc/pki/CA/private/docker.au-team.irpo.key \
+-out /etc/pki/CA/docker.au-team.irpo.csr \
+-subj "/CN=docker.au-team.irpo"
+
+mkdir -p /etc/ssl/
+curl -o /etc/ssl/openssl-ca.cnf https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/openssl-gost.cnf
+
+openssl ca \
+-config /etc/ssl/openssl-ca.cnf \
+-in /etc/pki/CA/web.au-team.irpo.csr \
+-out /etc/pki/CA/certs/web.au-team.irpo.crt \
+-extensions server_cert \
+-days 30 \
+-batch
+
+openssl ca \
+-config /etc/ssl/openssl-ca.cnf \
+-in /etc/pki/CA/docker.au-team.irpo.csr \
+-out /etc/pki/CA/certs/docker.au-team.irpo.crt \
+-extensions server_cert \
+-days 30 \
+-batch
+
+cp /etc/pki/CA/certs/ca.crt /raid0/nfs/
+
+HQ-CLI
+
+cp /mnt/nfs/ca.crt /etc/pki/ca-trust/source/anchors/
+update-ca-trust
+
+ISP
+
+apt-get update && apt-get install -y curl
+curl -o /etc/nginx/sites-available.d/default.conf https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/reverse-proxy-ssl.conf
+mkdir -p /etc/nginx/ssl
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/certs/web.au-team.irpo.crt /etc/nginx/ssl/
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/private/web.au-team.irpo.key /etc/nginx/ssl/
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/certs/docker.au-team.irpo.crt /etc/nginx/ssl/
+
+scp -P 2026 sshuser@172.16.1.10:/etc/pki/CA/private/docker.au-team.irpo.key /etc/nginx/ssl/
+
+chown root:root /etc/nginx/ssl/*
+chmod 600 /etc/nginx/ssl/*.key
+nginx -t
+systemctl restart nginx
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 3 -->
+<div id="sub3" class="page">
+  <div class="card">
+    <h2>Задание 3</h2>
+
+<pre>
+
+Задание 3: настройка ip-туннеля
+
+HQ-RTR
+
+apt-get update && apt-get install -y strongswan mc
+mcedit /etc/strongswan/ipsec.conf
+
+config setup
+    uniqueids = yes
+    charondebug="ike 2, knl 2, cfg 2, mgr 2, chd 2"
+conn br-rtr.au-team.irpo
+    type=transport
+    left=172.16.1.10
+    leftid=172.16.1.10
+    right=172.16.2.10
+    rightid=172.16.2.10
+    authby=secret
+    ike=aes256-sha256-modp2048!
+    esp=aes256-sha256!
+    keyexchange=ikev2
+    ikelifetime=24h
+    lifetime=8h
+    dpddelay=30
+    dpdtimeout=120
+    dpdaction=restart
+    auto=start
+
+mcedit /etc/strongswan/ipsec.secrets
+
+172.16.1.10 172.16.2.10 : PSK "123qweR%"
+
+systemctl start ipsec
+systemctl enable --now strongswan-starter
+
+BR-RTR
+
+apt-get update && apt-get install -y strongswan mc
+mcedit /etc/strongswan/ipsec.conf
+
+config setup
+    uniqueids = yes
+    charondebug="ike 2, knl 2, cfg 2, mgr 2, chd 2"
+conn hq-rtr.au-team.irpo
+    type=transport
+    left=172.16.2.10
+    leftid=172.16.2.10
+    right=172.16.1.10
+    rightid=172.16.1.10
+    authby=secret
+    ike=aes256-sha256-modp2048!
+    esp=aes256-sha256!
+    keyexchange=ikev2
+    ikelifetime=24h
+    lifetime=8h
+    dpddelay=30
+    dpdtimeout=120
+    dpdaction=restart
+    auto=start
+
+mcedit /etc/strongswan/ipsec.secrets
+
+172.16.2.10 172.16.1.10 : PSK "123qweR%"
+
+systemctl start ipsec
+systemctl enable --now strongswan-starter
+
+Проверка BR-RTR
+
+apt-get install -y tcpdump
+tcpdump -i enp7s1 -n esp
+
+HQ-RTR
+
+ping 172.16.2.10
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 4 -->
+<div id="sub4" class="page">
+  <div class="card">
+    <h2>Задание 4</h2>
+
+<pre>
+
+Задание 4: настройка межсетевого экрана
+
+HQ-RTR
+
+apt-get install -y curl dos2unix
+curl -o /etc/nftables.conf https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/hq-rtr_nftables.conf
+dos2unix /etc/nftables.conf
+ipsec status
+
+BR-RTR
+
+apt-get install -y curl dos2unix
+curl -o /etc/nftables.conf https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/br-rtr_nftables.conf
+dos2unix /etc/nftables.conf
+ipsec status
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 5 -->
+<div id="sub5" class="page">
+  <div class="card">
+    <h2>Задание 5</h2>
+
+<pre>
+
+Задание 5
+
+HQ-SRV
+
+apt-get install -y cups cups-pdf
+systemctl enable --now cups
+cupsctl --share-printers --remote-any
+systemctl restart cups
+
+HQ-CLI
+
+apt-get install -y cups system-config-printer
+mcedit /etc/hosts
+
+192.168.1.10 hq-srv.au-team.irpo hq-srv
+
+Открываем пуск и пишем Параметры печати
+Жмём добавить и в строке URL вводим http://192.168.1.10:631/printers/PDF
+Жмём далее и снова далее, находим драйвер Generic CUPS-PDF
+Снова жмём далее и применяем настройки
+Появиться уведомление о печати
+Задание выполнено
+
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 6 -->
+<div id="sub6" class="page">
+  <div class="card">
+    <h2>Задание 6</h2>
+    <pre> 
+Задание 6
+
+HQ-SRV
+
+apt-get update && apt-get install -y rsyslog
+mcedit /etc/rsyslog.d/00_common.conf
+
+Расскоментируем модули imuxsock и imklog, а также модуль imtcp
+
+$template RemoteLogs, "/opt/%HOSTNAME%/rsyslog.txt"
+*.* ?RemoteLogs
+& stop
+
+systemctl enable --now rsyslog
+systemctl start rsyslog
+systemctl restart rsyslog
+
+HQ-RTR, BR-RTR
+
+apt-get update && apt-get install -y rsyslog
+mcedit /etc/rsyslog.d/00_common.conf
+
+Расскоментируем все 4 модуля
+
+*.* @@hq-srv.au-team.irpo:514
+*.warning @@192.168.1.10:514
+
+systemctl enable --now rsyslog
+systemctl start rsyslog
+systemctl restart rsyslog
+
+BR-SRV
+
+apt-get update && apt-get install -y rsyslog
+mcedit /etc/rsyslog.d/00_common.conf
+
+Расскоментируем все 4 модуля
+
+*.warning @@192.168.1.10:514
+
+systemctl enable --now rsyslog
+systemctl start rsyslog
+systemctl restart rsyslog
+
+Проверка BR-SRV
+
+logger -p user.info “Test info”
+logger -p user.warning “Test warning”
+logger -p user.error “Test error”
+
+HQ-SRV
+
+cat /opt/br-srv/rsyslog.txt
+
+Настройка ротации логов
+
+mcedit /etc/logrotate.d/rsyslog
+
+/var/log/syslog
+/var/log/mail.log
+/var/log/kern.log
+/var/log/auth.log
+/var/log/user.log
+/var/log/cron.log
+{
+	rotate 4
+	weekly
+	missingok
+	notifempty
+	compress
+	delaycompress
+	sharedscripts
+	postrotate
+		/usr/lib/rsyslog/rsyslog-rotate
+	endscript
+}
+/opt/*/rsyslog.txt {
+	weekly
+	minsize 10M
+	compress
+	missingok
+	notifempty
+	create 0644 root root
+	rotate 4
+}
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 7 -->
+<div id="sub7" class="page">
+  <div class="card">
+    <h2>Задание 7</h2>
+    <pre> 
+Задание 7
+
+HQ-SRV
+
+apt-get update && apt-get install -y postgresql17-server zabbix-server-pgsql fping
+
+/etc/init.d/postgresql initdb
+
+systemctl enable --now postgresql
+
+su - postgres -s /bin/sh -c 'createuser --no-superuser --no-createdb --no-createrole --encrypted --pwprompt zabbix'
+
+su - postgres -s /bin/sh -c 'createdb -O zabbix zabbix'
+
+rpm -ql zabbix-common-database-pgsql | grep schema.sql # Заменить * на результат
+
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/schema.sql zabbix'
+
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/images.sql zabbix'
+
+su - postgres -s /bin/sh -c 'psql -U zabbix -f /usr/share/doc/zabbix-common-database-pgsql-*/data.sql zabbix'
+
+apt-get install apache2 apache2-mod_php8.2
+systemctl enable --now httpd2
+
+apt-get install php8.2 php8.2-mbstring php8.2-sockets php8.2-gd php8.2-xmlreader php8.2-pgsql php8.2-ldap php8.2-openssl
+
+mcedit /etc/php/8.4/apache2-mod_php/php.ini
+
+memory_limit = 256M
+post_max_size = 32M
+max_execution_time = 600
+max_input_time = 600
+date.timezone = Asia/Yekaterinburg
+always_populate_raw_post_data = -1
+
+systemctl restart httpd2
+mcedit /etc/zabbix/zabbix_server.conf
+
+DBHost=localhost
+DBName=zabbix
+DBUser=zabbix
+DBPassword=P@ssw0rd
+
+systemctl enable --now zabbix_pgsql
+apt-get install zabbix-phpfrontend-apache2 zabbix-phpfrontend-php8.2
+ln -s /etc/httpd2/conf/addon.d/A.zabbix.conf /etc/httpd2/conf/extra-enabled/
+systemctl restart httpd2
+chown apache2:apache2 /var/www/webapps/zabbix/ui/conf
+
+В браузере перейти на страницу установки Zabbix сервера:
+http://<ip-сервера>/zabbix 
+Войдя в систему, нужно сменить пароль пользователя (Administration ⇾ Users), завести других пользователей и можно начать настраивать Zabbix.
+
+HQ-SRV
+
+apt-get update && apt-get install zabbix-agent
+mcedit /etc/zabbix/zabbix_agentd.conf
+
+Server=127.0.0.1
+ServerActive=127.0.0.1
+Hostname=zabbix_server
+
+systemctl enable --now zabbix_agentd.service
+
+HQ-RTR, BR-RTR, BR-SRV
+
+apt-get update && apt-get install zabbix-agent
+mcedit /etc/zabbix/zabbix_agentd.conf
+
+Server=192.168.1.10
+ServerActive=192.168.1.10
+#Hostname=
+
+systemctl enable --now zabbix_agentd.service
+
+После настройки возвращаемся в веб-интерфейс Zabbix и жмём кнопку "Создать узел"
+В появившемся окне добавляем следующие настройки:
+Имя узла: <имя_машины>
+Шаблоны: <Нажимаем кнопку выбрать, ввыбираем раздел operating system и в нем выбираем пункт Linux by Zabbix agent
+Группы узлов: Zabbix server или Linux Server
+Интерфейс: <ip-адрес машины>
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 8 -->
+<div id="sub8" class="page">
+  <div class="card">
+    <h2>Задание 8</h2>
+
+    <pre> 
+Задание 8
+
+BR-SRV
+
+mkdir /etc/ansible/PC_INFO
+apt-get update && apt-get install -y dos2unix curl
+curl -o /etc/ansible/inventory.yml https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/inventory.yml
+dos2unix /etc/ansible/inventory.yml
+
+Проверка:
+
+ansible-playbook /etc/ansible/inventory.yml
+cd /etc/ansible/PC_INFO
+
+</pre>
+
+  </div>
+</div>
+
+<!-- SUBMODULE 9 -->
+<div id="sub9" class="page">
+  <div class="card">
+    <h2>Задание 9</h2>
+<pre>
+
+Задание 9
+
+BR-SRV
+
+mkdir /etc/ansible/NETWORK_INFO
+curl -o /etc/ansible/backup.yml https://raw.githubusercontent.com/DenTret/demo2026/refs/heads/main/backup.yml
+
+HQ-RTR, BR-RTR
+
+apt-get update && apt-get install -y sudo
+
+Проверка BR-SRV
+
+ansible-playbook /etc/ansible/backup.yml
+ls -la /etc/ansible/NETWORK_INFO
+ls -la /etc/ansible/NETWORK_INFO/HQ-RTR
+ls -la /etc/ansible/NETWORK_INFO/BR-RTR
+cat /etc/ansible/NETWORK_INFO/HQ-RTR/interfaces
+
+</pre>
+
+  </div>
+</div>
+
+
+<script>
+  function showPage(pageId) {
+    var pages = document.getElementsByClassName('page');
+    for (var i = 0; i < pages.length; i++) {
+      pages[i].classList.remove('active');
+    }
+    document.getElementById(pageId).classList.add('active');
+  }
+</script>
+
+</body>
+</html>

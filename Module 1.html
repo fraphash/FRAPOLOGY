@@ -96,6 +96,46 @@
 ==========ISP==========
 
 root/toor
+  * ip link set "интерфейс" up - включить интерфейс
+  * ip -br -c a - инфо по включенным интерфейсам и подключениям
+  * ip addr add "адрес" dev "интерфейс" - назначить адрес  
+  ip r                        # Таблица маршрутизации
+
+ip tunnel show              # Просмотр GRE/IPIP туннелей
+
+ss -ltnp                    # Проверка открытых TCP-портов и процессов
+
+ss -lun                     # Проверка открытых UDP-портов
+
+host hq-srv                 # Проверка DNS-записи hq-srv
+
+host br-rtr                 # Проверка DNS-записи br-rtr
+
+ping 8.8.8.8 -c 3          # Проверка выхода в интернет по IP
+
+vtysh -c "show ip ospf neighbor" # Проверка соседей OSPF
+
+vtysh -c "show ip route ospf" # Просмотр маршрутов, полученных через OSPF
+
+systemctl status network # Проверка состояния сетевой службы
+
+systemctl restart network # Перезапуск сети
+
+systemctl restart frr # Перезапуск OSPF/FRR
+
+systemctl restart bind # Перезапуск DNS-сервера BIND
+
+systemctl restart dnsmasq # Перезапуск DHCP-сервера dnsmasq
+
+systemctl restart sshd # Перезапуск SSH-сервера
+
+journalctl -xe              # Последние ошибки системы
+
+journalctl -u frr -n 30     # Последние ошибки OSPF
+
+journalctl -u bind -n 30    # Последние ошибки DNS
+
+journalctl -u dnsmasq -n 30 # Последние ошибки DHCP
 
 -------имя хоста---------
 
